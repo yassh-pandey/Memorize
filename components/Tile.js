@@ -1,4 +1,4 @@
-import React, {useRef, useState} from 'react'
+import React, {useRef, useState, useEffect} from 'react'
 import {
     StyleSheet,
     View,
@@ -10,14 +10,21 @@ import {
   import CircularProgress from "./CircularProgress"
 
 
-function Tile({displayEmoji, tileKey}) {
-    // const [getTileKey, ] = useState(tileKey);
+function Tile({displayEmoji, tileKey, addCardToActiveCards, removeCardFromActiveCard, disableRemainingCards}) {
+
+
+    const [getTileKey, ] = useState(tileKey);
     const tileBackgroundAnimatedValue = useRef(new Animated.Value(0)).current;
     const tileEmojiAnimatedValue = useRef(new Animated.Value(0)).current;
     const [isFaceUp, setIsFaceUpState] = useState(false);
     const [tileDisabled, setTileDisableState] = useState(false);
     const [tileElevation, setTileElevation] = useState(5);
+    
     const tilePressed = (e)=>{
+        if(disableRemainingCards===true){
+            return;
+        }
+        addCardToActiveCards(getTileKey);
         setTileElevation(0);
         setTileDisableState(true);
         if(isFaceUp===false){
@@ -25,52 +32,55 @@ function Tile({displayEmoji, tileKey}) {
                 Animated.timing(tileBackgroundAnimatedValue, 
                     {
                         toValue: 1,
-                        duration: 250,
-                        easing: Easing.inOut(Easing.quad),
+                        duration: 200,
+                        easing: Easing.inOut(Easing.in),
                         useNativeDriver: true
                     }),
                 Animated.timing(tileEmojiAnimatedValue, 
                     {
                         toValue: 1,
-                        duration: 250,
-                        easing: Easing.inOut(Easing.quad),
+                        duration: 200,
+                        easing: Easing.inOut(Easing.in),
                         useNativeDriver: true
                     })
             ]).start(()=>{
                 setIsFaceUpState(true);
             });
         }
-        setTimeout(()=>{
-            setTileElevation(5)
-        }, 2200)
+    
         setTimeout(() => {
             Animated.sequence([
                 Animated.timing(tileEmojiAnimatedValue, 
                     {
                         toValue: 0,
-                        duration: 250,
+                        duration: 180,
                         useNativeDriver: true,
-                        easing: Easing.inOut(Easing.quad)
+                        easing: Easing.linear
                     }),
                 Animated.timing(tileBackgroundAnimatedValue, 
                     {
                         toValue: 0,
-                        duration: 250,
+                        duration: 180,
                         useNativeDriver: true,
-                        easing: Easing.inOut(Easing.quad)
+                        easing: Easing.linear
                     })
             ]).start(()=>{
                 setIsFaceUpState(false);
                 setTileDisableState(false);
+                removeCardFromActiveCard(tileKey);
             });
-        }, 1800);
+        }, 1500);
+
+        // setTimeout(()=>{
+        //     setTileElevation(5)
+        // }, 2200)
     };
     return (
         <View style={{
             ...TileStyles.ContainerView,
-            elevation: tileElevation
+            // elevation: tileElevation
         }}>
-            <TouchableWithoutFeedback onPress={tilePressed} disabled={tileDisabled} >
+        <TouchableWithoutFeedback onPress={tilePressed} disabled={tileDisabled} >
             <Animated.View>
                 <Animated.View style={{...TileStyles.FaceDown, 
                     transform: 
@@ -116,10 +126,10 @@ function Tile({displayEmoji, tileKey}) {
 const TileStyles = StyleSheet.create({
     ContainerView: {
         borderRadius: 10,
-        elevation: 10
+        //elevation: 10
     },
     Emoji: {
-        transform: [{scale: 4}],
+        transform: [{scale: 3}],
         textAlign: "center",
         position: "absolute"
     },

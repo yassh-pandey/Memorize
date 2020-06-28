@@ -10,9 +10,9 @@ function CircularProgress() {
         Animated.timing(progress,
             {
                 toValue: 50,
-                duration: 500,
+                duration: 400,
                 useNativeDriver: true,
-                easing: Easing.inOut(Easing.quad)
+                easing: Easing.linear
             }).start(()=>{
                 setHalfProgressDone(true);
             });
@@ -23,9 +23,9 @@ function CircularProgress() {
             Animated.timing(secondaryProgress,
                 {
                     toValue: 100,
-                    duration: 500,
+                    duration: 400,
                     useNativeDriver: true,
-                    easing: Easing.inOut(Easing.quad)
+                    easing: Easing.linear
                 }).start();
         }
     }, [halfProgressDone])

@@ -1,4 +1,4 @@
-import React, {useState} from 'react';
+import React, {useState, useEffect} from 'react';
 import {
   SafeAreaView,
   StyleSheet,
@@ -16,6 +16,7 @@ const emojiArray = ["🙀", "👻", "👽", "💩", "☠️", "🤖", "😹"];
 
 
 const App = () => {
+
   const FisherYates_Shuffel = (array)=>{
     let i = array.length;
     while(--i>0){
@@ -27,6 +28,7 @@ const App = () => {
     }
     return array; 
   }
+
   let deckOfCards = FisherYates_Shuffel(emojiArray);
   deckOfCards = FisherYates_Shuffel([...emojiArray, ...deckOfCards]);
   deckOfCards = deckOfCards.map((card, index)=>{
@@ -37,10 +39,39 @@ const App = () => {
       }
     )
   })
+
   deckOfCards = [...deckOfCards, {data: "", key: `item${deckOfCards.length}`}];
+
   const [getDeckOfCardsState, setDeckOfCardsState] = useState([...deckOfCards]);
-  // console.log(getDeckOfCardsState);
-  
+
+  const [getActiveCards, setActiveCards] = useState([]);
+
+  const [disableRemainingCards, setDisableRemainingCards] = useState(false); 
+
+  const addCardToActiveCards = (cardKey)=>{
+    const pressedCard = getDeckOfCardsState.find((card)=>{
+      return card.key === cardKey;
+    });
+    setActiveCards((currentActiveCards)=>[...currentActiveCards, pressedCard]);
+  };
+
+  const removeCardFromActiveCard = (cardKey)=>{
+    setActiveCards((currentActiveCards)=>{
+      return currentActiveCards.filter((card)=>{
+        return card.key !== cardKey
+      }); 
+    });
+  };
+
+  useEffect(()=>{
+    if(getActiveCards.length===2){
+      setDisableRemainingCards(true);
+    }
+    else{
+      setDisableRemainingCards(false);
+    }
+  }, [getActiveCards]);
+
   return (
     <>
       <StatusBar barStyle="dark-content" />
@@ -62,7 +93,10 @@ const App = () => {
               else{
                 return(
                   <View style={{flex: 1, alignItems: "center", margin: 10}}>
-                    <Tile displayEmoji={item.data} />
+                    <Tile displayEmoji={item.data} tileKey={item.key} addCardToActiveCards={addCardToActiveCards} 
+                      removeCardFromActiveCard={removeCardFromActiveCard}
+                      disableRemainingCards={disableRemainingCards}
+                    />
                   </View>
                 )
               }
