@@ -16,16 +16,22 @@ function Tile({displayEmoji, tileKey, addCardToActiveCards, removeCardFromActive
     const [getTileKey, ] = useState(tileKey);
     const tileBackgroundAnimatedValue = useRef(new Animated.Value(0)).current;
     const tileEmojiAnimatedValue = useRef(new Animated.Value(0)).current;
+    const tileElevationAnimatedValue = useRef(new Animated.Value(6)).current;
     const [isFaceUp, setIsFaceUpState] = useState(false);
     const [tileDisabled, setTileDisableState] = useState(false);
-    const [tileElevation, setTileElevation] = useState(5);
     
     const tilePressed = (e)=>{
         if(disableRemainingCards===true){
             return;
         }
+        Animated.timing(tileElevationAnimatedValue, {
+            toValue: 0,
+            duration: 0,
+            easing: Easing.inOut(Easing.in),
+            useNativeDriver: true
+        }).start();
+        
         addCardToActiveCards(getTileKey);
-        setTileElevation(0);
         setTileDisableState(true);
         if(isFaceUp===false){
             Animated.sequence([
@@ -70,63 +76,59 @@ function Tile({displayEmoji, tileKey, addCardToActiveCards, removeCardFromActive
                 removeCardFromActiveCard(tileKey);
             });
         }, 1500);
-
-        // setTimeout(()=>{
-        //     setTileElevation(5)
-        // }, 2200)
     };
     return (
-        <View style={{
+        <Animated.View style={{
             ...TileStyles.ContainerView,
-            // elevation: tileElevation
+            elevation: tileElevationAnimatedValue
         }}>
-        <TouchableWithoutFeedback onPress={tilePressed} disabled={tileDisabled} >
-            <Animated.View>
-                <Animated.View style={{...TileStyles.FaceDown, 
-                    transform: 
-                        [
-                            {
-                                rotateY: tileBackgroundAnimatedValue.interpolate(
-                                    {
-                                        inputRange: [0, 1],
-                                        outputRange: ["0deg", "90deg"]
-                                    })
-                            }
-                        ]
-                    }}>
-                </Animated.View>
-                <Animated.View style={{...TileStyles.FaceUp, 
+            <TouchableWithoutFeedback onPress={tilePressed} disabled={tileDisabled} >
+                <Animated.View>
+                    <Animated.View style={{...TileStyles.FaceDown, 
                         transform: 
-                        [
+                            [
+                                {
+                                    rotateY: tileBackgroundAnimatedValue.interpolate(
+                                        {
+                                            inputRange: [0, 1],
+                                            outputRange: ["0deg", "90deg"]
+                                        })
+                                }
+                            ]
+                        }}>
+                    </Animated.View>
+                    <Animated.View style={{...TileStyles.FaceUp, 
+                            transform: 
+                            [
+                                {
+                                    rotateY: tileEmojiAnimatedValue.interpolate(
+                                        {
+                                            inputRange: [0, 1],
+                                            outputRange: ["-90deg", "0deg"]
+                                        })
+                                }
+                            ]
+                        }}>
                             {
-                                rotateY: tileEmojiAnimatedValue.interpolate(
-                                    {
-                                        inputRange: [0, 1],
-                                        outputRange: ["-90deg", "0deg"]
-                                    })
+                                isFaceUp
+                                ?
+                                <CircularProgress />
+                                :
+                                null
                             }
-                        ]
-                    }}>
-                        {
-                            isFaceUp
-                            ?
-                            <CircularProgress />
-                            :
-                            null
-                        }
-                        <Text style={TileStyles.Emoji}>
-                            {displayEmoji}
-                        </Text>
+                            <Text style={TileStyles.Emoji}>
+                                {displayEmoji}
+                            </Text>
+                    </Animated.View>
                 </Animated.View>
-            </Animated.View>
-        </TouchableWithoutFeedback>
-        </View>
+            </TouchableWithoutFeedback>
+        </Animated.View>
     )
 }
 const TileStyles = StyleSheet.create({
     ContainerView: {
         borderRadius: 10,
-        //elevation: 10
+        elevation: 10
     },
     Emoji: {
         transform: [{scale: 3}],
