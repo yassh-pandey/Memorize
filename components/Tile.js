@@ -10,7 +10,10 @@ import {
   import CircularProgress from "./CircularProgress"
 
 
-function Tile({displayEmoji, tileKey, addCardToActiveCards, getActiveCards, faceDownSignalArray, setActiveCards, disableRemainingTiles}) {
+function Tile({displayEmoji, tileKey, addCardToActiveCards, getActiveCards, 
+                faceDownSignalArray, setActiveCards, disableRemainingTiles,
+                faceUpAnimationStartsForAnyTile, setFaceUpAnimationStartsForAnyTile
+            }) {
 
 
     const [getTileKey, ] = useState(tileKey);
@@ -68,7 +71,7 @@ function Tile({displayEmoji, tileKey, addCardToActiveCards, getActiveCards, face
     }, [faceDownSignalArray])
     
     const tilePressed = (e)=>{
-        if(disableRemainingTiles===true||tileDisabled===true){
+        if(disableRemainingTiles===true||tileDisabled===true||faceUpAnimationStartsForAnyTile===true){
             return ;
         }
         setTileDisableState(true);
@@ -80,7 +83,7 @@ function Tile({displayEmoji, tileKey, addCardToActiveCards, getActiveCards, face
             easing: Easing.inOut(Easing.in),
             useNativeDriver: true
         }).start();
-        
+        setFaceUpAnimationStartsForAnyTile(true);
         if(isFaceUp===false){
             Animated.sequence([
                 Animated.timing(tileBackgroundAnimatedValue, 
@@ -99,6 +102,7 @@ function Tile({displayEmoji, tileKey, addCardToActiveCards, getActiveCards, face
                     })
             ]).start(()=>{
                 setIsFaceUpState(true);
+                setFaceUpAnimationStartsForAnyTile(false);
             });
         }
     };

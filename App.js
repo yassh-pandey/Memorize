@@ -50,6 +50,8 @@ const App = () => {
 
   const [disableRemainingTiles, setDisableRemainingTiles] = useState(false);
 
+  const [faceUpAnimationStartsForAnyTile , setFaceUpAnimationStartsForAnyTile] = useState(false);
+
   const addCardToActiveCards = (cardKey)=>{
     const pressedCard = getDeckOfCardsState.find((card)=>{
       return card.key === cardKey;
@@ -130,6 +132,8 @@ const App = () => {
                       setActiveCards={setActiveCards}
                       faceDownSignalArray={faceDownSignalArray}
                       disableRemainingTiles={disableRemainingTiles}
+                      faceUpAnimationStartsForAnyTile={faceUpAnimationStartsForAnyTile}
+                      setFaceUpAnimationStartsForAnyTile={setFaceUpAnimationStartsForAnyTile}
                     />
                   </View>
                 )
