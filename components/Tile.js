@@ -1,4 +1,4 @@
-import React, {useRef, useState, useEffect} from 'react'
+import React, {useRef, useState, useEffect, memo} from 'react'
 import {
     StyleSheet,
     View,
@@ -10,7 +10,7 @@ import {
   import CircularProgress from "./CircularProgress"
 
 
-function Tile({displayEmoji, tileKey, addCardToActiveCards, removeCardFromActiveCard, disableRemainingCards}) {
+function Tile({displayEmoji, tileKey, addCardToActiveCards, getActiveCards, faceDownSignalArray, setActiveCards, disableRemainingTiles}) {
 
 
     const [getTileKey, ] = useState(tileKey);
@@ -19,11 +19,61 @@ function Tile({displayEmoji, tileKey, addCardToActiveCards, removeCardFromActive
     const tileElevationAnimatedValue = useRef(new Animated.Value(6)).current;
     const [isFaceUp, setIsFaceUpState] = useState(false);
     const [tileDisabled, setTileDisableState] = useState(false);
+
+    useEffect(()=>{
+        for(let index=0; index<faceDownSignalArray.length; index++){
+            let object  = faceDownSignalArray[index];
+            if(getTileKey===object.key && object.faceDownSignal===true && isFaceUp===true){
+                if(getActiveCards[0].data===getActiveCards[1].data){
+                    Animated.sequence([
+                        Animated.timing(tileEmojiAnimatedValue, 
+                            {
+                                toValue: 0,
+                                duration: 200,
+                                useNativeDriver: true,
+                                easing: Easing.linear
+                            })
+                    ]).start(()=>{
+                        setIsFaceUpState(false);
+                        setTileDisableState(true);
+                        setActiveCards([getActiveCards[2]]);
+                    });
+                }
+                else{
+                    Animated.sequence([
+                        Animated.timing(tileEmojiAnimatedValue, 
+                            {
+                                toValue: 0,
+                                duration: 200,
+                                useNativeDriver: true,
+                                easing: Easing.linear
+                            }),
+                        Animated.timing(tileBackgroundAnimatedValue, 
+                            {
+                                toValue: 0,
+                                duration: 200,
+                                useNativeDriver: true,
+                                easing: Easing.linear
+                            })
+                    ]).start(()=>{
+                        setIsFaceUpState(false);
+                        setTileDisableState(false);
+                        setActiveCards([getActiveCards[2]]);
+                    });
+                }
+                
+                break;
+            }
+        }
+    }, [faceDownSignalArray])
     
     const tilePressed = (e)=>{
-        if(disableRemainingCards===true){
-            return;
+        if(disableRemainingTiles===true||tileDisabled===true){
+            return ;
         }
+        setTileDisableState(true);
+        addCardToActiveCards(getTileKey);
+
         Animated.timing(tileElevationAnimatedValue, {
             toValue: 0,
             duration: 0,
@@ -31,8 +81,6 @@ function Tile({displayEmoji, tileKey, addCardToActiveCards, removeCardFromActive
             useNativeDriver: true
         }).start();
         
-        addCardToActiveCards(getTileKey);
-        setTileDisableState(true);
         if(isFaceUp===false){
             Animated.sequence([
                 Animated.timing(tileBackgroundAnimatedValue, 
@@ -53,29 +101,6 @@ function Tile({displayEmoji, tileKey, addCardToActiveCards, removeCardFromActive
                 setIsFaceUpState(true);
             });
         }
-    
-        setTimeout(() => {
-            Animated.sequence([
-                Animated.timing(tileEmojiAnimatedValue, 
-                    {
-                        toValue: 0,
-                        duration: 180,
-                        useNativeDriver: true,
-                        easing: Easing.linear
-                    }),
-                Animated.timing(tileBackgroundAnimatedValue, 
-                    {
-                        toValue: 0,
-                        duration: 180,
-                        useNativeDriver: true,
-                        easing: Easing.linear
-                    })
-            ]).start(()=>{
-                setIsFaceUpState(false);
-                setTileDisableState(false);
-                removeCardFromActiveCard(tileKey);
-            });
-        }, 1500);
     };
     return (
         <Animated.View style={{
@@ -155,4 +180,4 @@ const TileStyles = StyleSheet.create({
     },
   
 });
-export default Tile
+export default memo(Tile)

@@ -7,10 +7,10 @@ import {
   Text,
   FlatList,
   StatusBar,
-  Dimensions
+  Dimensions,
 } from 'react-native';
 import Tile from './components/Tile';
-import CircularProgress from './components/CircularProgress';
+import Score from './components/Score';
 
 const emojiArray = ["🙀", "👻", "👽", "💩", "☠️", "🤖", "😹"];
 
@@ -42,11 +42,13 @@ const App = () => {
 
   deckOfCards = [...deckOfCards, {data: "", key: `item${deckOfCards.length}`}];
 
-  const [getDeckOfCardsState, setDeckOfCardsState] = useState([...deckOfCards]);
+  const [getDeckOfCardsState, ] = useState([...deckOfCards]);
 
   const [getActiveCards, setActiveCards] = useState([]);
 
-  const [disableRemainingCards, setDisableRemainingCards] = useState(false); 
+  const [score, setScore] = useState(0);
+
+  const [disableRemainingTiles, setDisableRemainingTiles] = useState(false);
 
   const addCardToActiveCards = (cardKey)=>{
     const pressedCard = getDeckOfCardsState.find((card)=>{
@@ -63,23 +65,52 @@ const App = () => {
     });
   };
 
+  const rotateFaceDown = [];
+  deckOfCards.forEach(card=>{
+    rotateFaceDown.push({key: card.key, faceDownSignal: false});
+  });
+
+  const [faceDownSignalArray, setFaceDownSignalArray] = useState(rotateFaceDown);
+
+
   useEffect(()=>{
-    if(getActiveCards.length===2){
-      setDisableRemainingCards(true);
+    if(getActiveCards.length===1){
+      setDisableRemainingTiles(false);
     }
-    else{
-      setDisableRemainingCards(false);
+    if(getActiveCards.length===2 && getActiveCards[0].data === getActiveCards[1].data){
+      setScore((currentScore)=>currentScore+6);
+    }
+    else if(getActiveCards.length===2 && getActiveCards[0].data !== getActiveCards[1].data){
+      setScore((currentScore)=>currentScore-1);
+    }
+    if(getActiveCards.length===3){
+      setDisableRemainingTiles(true);
+      setFaceDownSignalArray(rotateFaceDown);
+      const firstCardToClose = getActiveCards[0];
+      const secondCardToClose = getActiveCards[1];
+      const newFaceDownSignalArray = faceDownSignalArray.map(object=>{
+        if(object.key === firstCardToClose.key || object.key === secondCardToClose.key){
+          return {key: object.key, faceDownSignal: true};
+        }
+        else{
+          return object;
+        }
+      });
+      setFaceDownSignalArray(newFaceDownSignalArray);
     }
   }, [getActiveCards]);
+
 
   return (
     <>
       <StatusBar barStyle="dark-content" />
       <SafeAreaView style={styles.AppContainer}>
         <FlatList 
+          ListHeaderComponent={<Score score={score}/>}
+          ListFooterComponent={<View style={{flex: 1, height: 20, backgroundColor: "transparent"}}></View>}
           data={getDeckOfCardsState}
           numColumns={3}
-          contentContainerStyle={{justifyContent: "center", flex: 1}}
+          contentContainerStyle={{justifyContent: "center",}}
           renderItem={
             ({item, index})=>{
               if(index===getDeckOfCardsState.length-1){
@@ -95,7 +126,10 @@ const App = () => {
                   <View style={{flex: 1, alignItems: "center", margin: 10}}>
                     <Tile displayEmoji={item.data} tileKey={item.key} addCardToActiveCards={addCardToActiveCards} 
                       removeCardFromActiveCard={removeCardFromActiveCard}
-                      disableRemainingCards={disableRemainingCards}
+                      getActiveCards={getActiveCards}
+                      setActiveCards={setActiveCards}
+                      faceDownSignalArray={faceDownSignalArray}
+                      disableRemainingTiles={disableRemainingTiles}
                     />
                   </View>
                 )
