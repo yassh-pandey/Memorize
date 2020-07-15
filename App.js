@@ -8,9 +8,13 @@ import {
   FlatList,
   StatusBar,
   Dimensions,
+  Animated
 } from 'react-native';
 import Tile from './components/Tile';
 import Score from './components/Score';
+import GameEnds from './components/GameEnds';
+
+const {width, height} = Dimensions.get('window');
 
 const emojiArray = ["🙀", "👻", "👽", "💩", "☠️", "🤖", "😹"];
 
@@ -52,6 +56,10 @@ const App = () => {
 
   const [faceUpAnimationStartsForAnyTile , setFaceUpAnimationStartsForAnyTile] = useState(false);
 
+  const [correctlyPredictedCards, setCorrectlyPredictedCards] = useState(0);
+
+  const [gameEnds, setGameEnds] = useState(true);
+
   const addCardToActiveCards = (cardKey)=>{
     const pressedCard = getDeckOfCardsState.find((card)=>{
       return card.key === cardKey;
@@ -74,6 +82,12 @@ const App = () => {
 
   const [faceDownSignalArray, setFaceDownSignalArray] = useState(rotateFaceDown);
 
+  useEffect(()=>{
+    if(correctlyPredictedCards===14){
+      //Game ends
+      setGameEnds(true);
+    }
+  }, [correctlyPredictedCards])
 
   useEffect(()=>{
     if(getActiveCards.length===1){
@@ -81,6 +95,7 @@ const App = () => {
     }
     if(getActiveCards.length===2 && getActiveCards[0].data === getActiveCards[1].data){
       setScore((currentScore)=>currentScore+6);
+      setCorrectlyPredictedCards((currentState)=>currentState+2);
     }
     else if(getActiveCards.length===2 && getActiveCards[0].data !== getActiveCards[1].data){
       setScore((currentScore)=>currentScore-1);
@@ -107,40 +122,56 @@ const App = () => {
     <>
       <StatusBar barStyle="dark-content" />
       <SafeAreaView style={styles.AppContainer}>
-        <FlatList 
-          ListHeaderComponent={<Score score={score}/>}
-          ListFooterComponent={<View style={{flex: 1, height: 20, backgroundColor: "transparent"}}></View>}
-          data={getDeckOfCardsState}
-          numColumns={3}
-          contentContainerStyle={{justifyContent: "center",}}
-          renderItem={
-            ({item, index})=>{
-              if(index===getDeckOfCardsState.length-1){
-                return(
-                  <View style={{flex: 1, alignItems: "center", margin: 10}}>
-                    <View style={{width: 100, height: 100, backgroundColor: "transparent"}}>
-                    </View>
-                  </View>
-                )
-              }
-              else{
-                return(
-                  <View style={{flex: 1, alignItems: "center", margin: 10}}>
-                    <Tile displayEmoji={item.data} tileKey={item.key} addCardToActiveCards={addCardToActiveCards} 
-                      removeCardFromActiveCard={removeCardFromActiveCard}
-                      getActiveCards={getActiveCards}
-                      setActiveCards={setActiveCards}
-                      faceDownSignalArray={faceDownSignalArray}
-                      disableRemainingTiles={disableRemainingTiles}
-                      faceUpAnimationStartsForAnyTile={faceUpAnimationStartsForAnyTile}
-                      setFaceUpAnimationStartsForAnyTile={setFaceUpAnimationStartsForAnyTile}
-                    />
-                  </View>
-                )
-              }
+        <View style={styles.AppContainer}>
+            {
+            gameEnds
+            ?
+            <GameEnds />
+            :
+            (
+              <Animated.View
+              style={{
+                width: width
+              }}
+              >
+                  <FlatList 
+                  ListHeaderComponent={<Score score={score}/>}
+                  ListFooterComponent={<View style={{flex: 1, height: 20, backgroundColor: "transparent"}}></View>}
+                  data={getDeckOfCardsState}
+                  numColumns={3}
+                  contentContainerStyle={{justifyContent: "center",}}
+                  renderItem={
+                    ({item, index})=>{
+                      if(index===getDeckOfCardsState.length-1){
+                        return(
+                          <View style={{flex: 1, alignItems: "center", margin: 10}}>
+                            <View style={{width: 100, height: 100, backgroundColor: "transparent"}}>
+                            </View>
+                          </View>
+                        )
+                      }
+                      else{
+                        return(
+                          <View style={{flex: 1, alignItems: "center", margin: 10}}>
+                            <Tile displayEmoji={item.data} tileKey={item.key} addCardToActiveCards={addCardToActiveCards} 
+                              removeCardFromActiveCard={removeCardFromActiveCard}
+                              getActiveCards={getActiveCards}
+                              setActiveCards={setActiveCards}
+                              faceDownSignalArray={faceDownSignalArray}
+                              disableRemainingTiles={disableRemainingTiles}
+                              faceUpAnimationStartsForAnyTile={faceUpAnimationStartsForAnyTile}
+                              setFaceUpAnimationStartsForAnyTile={setFaceUpAnimationStartsForAnyTile}
+                            />
+                          </View>
+                        )
+                      }
+                    }
+                  }
+                />
+              </Animated.View>
+              )
             }
-          }
-        />
+        </View>
       </SafeAreaView>
     </>
   );
@@ -149,7 +180,9 @@ const App = () => {
 const styles = StyleSheet.create({
   AppContainer: {
     flex: 1,
-    backgroundColor: "#EEEEEE"
+    backgroundColor: "#EEEEEE",
+    justifyContent: "center",
+    alignItems: "center"
   }
 });
 
